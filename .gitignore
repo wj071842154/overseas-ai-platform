@@ -3,3 +3,5 @@ node_modules/
 .next/
 .env
 test-results/
+prisma/prisma/dev.db
+prisma/prisma/dev.db-journal
