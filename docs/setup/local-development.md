@@ -15,3 +15,11 @@
   - rejection flow
   - request evidence flow
   - request re-crawl flow
+
+## PostgreSQL Prep
+
+- If you plan to move local development to PostgreSQL later, start from:
+  - `.env.postgres.example`
+  - `docker-compose.postgres.yml`
+  - `docs/setup/postgresql-migration-prep.md`
+- Keep SQLite as the active local datasource until PostgreSQL is available and verified.
