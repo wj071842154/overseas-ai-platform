@@ -117,6 +117,14 @@ enum ReviewTaskStatus {
   rejected
 }
 
+enum ReviewDecisionType {
+  approve
+  approve_with_edit
+  reject
+  needs_evidence
+  re_crawl_required
+}
+
 enum ArticleStatus {
   draft
   pending_review
@@ -357,6 +365,7 @@ model ReviewTask {
   reviewedAt  DateTime?
   service     Service          @relation(fields: [serviceId], references: [id])
   changeLogs  ChangeLog[]
+  actionLogs  ReviewActionLog[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -364,6 +373,20 @@ model ReviewTask {
   @@index([status])
   @@index([taskType])
   @@index([priority])
+}
+
+model ReviewActionLog {
+  id           String             @id @default(cuid())
+  reviewTaskId String
+  actionType   ReviewDecisionType
+  operator     String?
+  notes        String?
+  createdAt    DateTime           @default(now())
+  reviewTask   ReviewTask         @relation(fields: [reviewTaskId], references: [id])
+
+  @@index([reviewTaskId])
+  @@index([actionType])
+  @@index([createdAt])
 }
 
 model ChangeLog {
