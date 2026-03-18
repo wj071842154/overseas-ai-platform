@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 
 import { applyApprovedChangeLogs } from './apply-change-log';
 import { createSnapshot } from './create-snapshot';
+import { logReviewAction } from './log-review-action';
 
 export async function publishServiceReview(reviewTaskId: string) {
   const task = await prisma.reviewTask.findUnique({
@@ -33,6 +34,11 @@ export async function publishServiceReview(reviewTaskId: string) {
   });
 
   await createSnapshot(task.serviceId);
+  await logReviewAction({
+    reviewTaskId,
+    actionType: 'approve',
+    notes: task.reviewNotes ?? 'Auto-approved by MVP publish workflow.'
+  });
 
   return {
     snapshotCreated: true,
