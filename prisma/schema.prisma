@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceTypeCode {
+  ai_official
+  ai_relay
+  overseas_account
+}
+
+enum ServiceStatus {
+  active
+  inactive
+  watchlist
+}
+
+enum ReviewStatus {
+  draft
+  pending_review
+  published
+  archived
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum BillingType {
+  monthly
+  yearly
+  payg
+  one_time
+}
+
+enum AvailabilityType {
+  supported
+  restricted
+  unknown
+}
+
+enum RiskType {
+  registration
+  payment
+  account_ban
+  policy_change
+  pricing_change
+  availability_change
+}
+
+enum EvidenceType {
+  official
+  third_party
+  editorial
+}
+
+enum SourceType {
+  official_pricing
+  official_help
+  official_status
+  third_party_public
+  editor_manual
+}
+
+enum CrawlJobType {
+  scheduled
+  manual
+  retry
+}
+
+enum CrawlJobStatus {
+  queued
+  running
+  success
+  failed
+}
+
+enum ChangeFieldGroup {
+  plan
+  registration
+  region
+  risk
+  service
+}
+
+enum ChangeType {
+  created
+  updated
+  removed
+}
+
+enum ChangeStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ReviewTaskType {
+  new_service
+  content_update
+  price_change
+  risk_update
+  registration_update
+  region_update
+}
+
+enum ReviewTaskStatus {
+  pending
+  in_review
+  approved
+  rejected
+}
+
+enum ArticleStatus {
+  draft
+  pending_review
+  published
+}
+
+enum ArticleServiceRelationType {
+  mentions
+  compares
+  tutorial_for
+}
+
+model ServiceType {
+  id          String          @id @default(cuid())
+  code        ServiceTypeCode @unique
+  name        String
+  description String?
+  services    Service[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Service {
+  id              String                   @id @default(cuid())
+  name            String
+  slug            String                   @unique
+  serviceTypeId   String
+  summary         String?
+  description     String?
+  officialWebsite String?
+  logoUrl         String?
+  status          ServiceStatus            @default(active)
+  riskLevel       RiskLevel                @default(medium)
+  reviewStatus    ReviewStatus             @default(draft)
+  lastReviewedAt  DateTime?
+  lastPublishedAt DateTime?
+  serviceType     ServiceType              @relation(fields: [serviceTypeId], references: [id])
+  plans                    Plan[]
+  registrationRequirements RegistrationRequirement[]
+  regionRequirements       RegionRequirement[]
+  riskNotes                RiskNote[]
+  sourceRecords            SourceRecord[]
+  crawlJobs                CrawlJob[]
+  changeLogs               ChangeLog[]
+  reviewTasks              ReviewTask[]
+  snapshots                ServiceSnapshot[]
+  articleRelations         ArticleServiceRelation[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([serviceTypeId])
+  @@index([status])
+  @@index([reviewStatus])
+  @@index([riskLevel])
+}
+
+model Plan {
+  id                 String        @id @default(cuid())
+  serviceId          String
+  sourceRecordId     String?
+  name               String
+  billingType        BillingType
+  currency           String
+  price              Decimal
+  priceUnit          String?
+  originalPrice      Decimal?
+  isActive           Boolean       @default(true)
+  supportsModelsText String?
+  paymentMethodsText String?
+  notes              String?
+  effectiveAt        DateTime?
+  expiresAt          DateTime?
+  service            Service       @relation(fields: [serviceId], references: [id])
+  sourceRecord       SourceRecord? @relation(fields: [sourceRecordId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([serviceId])
+  @@index([sourceRecordId])
+  @@index([billingType])
+  @@index([isActive])
+}
+
+model RegistrationRequirement {
+  id                     String        @id @default(cuid())
+  serviceId              String
+  sourceRecordId         String?
+  requiresEmail          Boolean?
+  requiresPhone          Boolean?
+  requiresForeignPhone   Boolean?
+  requiresPaymentMethod  Boolean?
+  paymentMethodNotes     String?
+  requiresSpecificRegion Boolean?
+  regionNotes            String?
+  deviceRequirements     String?
+  identityRequirements   String?
+  otherRequirements      String?
+  service                Service       @relation(fields: [serviceId], references: [id])
+  sourceRecord           SourceRecord? @relation(fields: [sourceRecordId], references: [id])
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  @@index([serviceId])
+  @@index([sourceRecordId])
+}
+
+model RegionRequirement {
+  id               String           @id @default(cuid())
+  serviceId        String
+  sourceRecordId   String?
+  regionCode       String
+  availabilityType AvailabilityType
+  notes            String?
+  service          Service          @relation(fields: [serviceId], references: [id])
+  sourceRecord     SourceRecord?    @relation(fields: [sourceRecordId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([serviceId])
+  @@index([sourceRecordId])
+  @@index([regionCode])
+  @@index([availabilityType])
+  @@unique([serviceId, regionCode])
+}
+
+model RiskNote {
+  id             String        @id @default(cuid())
+  serviceId      String
+  sourceRecordId String?
+  riskType       RiskType
+  severity       RiskLevel
+  title          String
+  content        String
+  evidenceType   EvidenceType
+  isVisible      Boolean       @default(true)
+  service        Service       @relation(fields: [serviceId], references: [id])
+  sourceRecord   SourceRecord? @relation(fields: [sourceRecordId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([serviceId])
+  @@index([sourceRecordId])
+  @@index([riskType])
+  @@index([severity])
+  @@index([isVisible])
+}
+
+model GuideArticle {
+  id               String                   @id @default(cuid())
+  title            String
+  slug             String                   @unique
+  category         String?
+  summary          String?
+  content          String
+  status           ArticleStatus            @default(draft)
+  seoTitle         String?
+  seoDescription   String?
+  authorId         String?
+  reviewerId       String?
+  publishedAt      DateTime?
+  articleRelations ArticleServiceRelation[]
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ArticleServiceRelation {
+  id           String                     @id @default(cuid())
+  articleId    String
+  serviceId    String
+  relationType ArticleServiceRelationType
+  article      GuideArticle               @relation(fields: [articleId], references: [id])
+  service      Service                    @relation(fields: [serviceId], references: [id])
+  createdAt    DateTime                   @default(now())
+
+  @@index([articleId])
+  @@index([serviceId])
+  @@unique([articleId, serviceId, relationType])
+}
+
+model SourceRecord {
+  id              String                    @id @default(cuid())
+  serviceId       String
+  sourceType      SourceType
+  sourceUrl       String
+  sourceTitle     String?
+  rawExcerpt      String?
+  snapshotText    String?
+  snapshotHash    String?
+  parserName      String?
+  confidenceScore Decimal?
+  capturedAt      DateTime
+  isActive        Boolean                   @default(true)
+  service         Service                   @relation(fields: [serviceId], references: [id])
+  plans                    Plan[]
+  registrationRequirements RegistrationRequirement[]
+  regionRequirements       RegionRequirement[]
+  riskNotes                RiskNote[]
+  changeLogs               ChangeLog[]
+  createdAt       DateTime                  @default(now())
+
+  @@index([serviceId])
+  @@index([sourceType])
+  @@index([capturedAt])
+  @@index([isActive])
+}
+
+model CrawlJob {
+  id            String         @id @default(cuid())
+  serviceId     String
+  jobType       CrawlJobType
+  status        CrawlJobStatus @default(queued)
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  errorMessage  String?
+  rawResultPath String?
+  service       Service        @relation(fields: [serviceId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([serviceId])
+  @@index([status])
+  @@index([jobType])
+  @@index([createdAt])
+}
+
+model ReviewTask {
+  id          String           @id @default(cuid())
+  serviceId   String
+  taskType    ReviewTaskType
+  priority    Int              @default(50)
+  status      ReviewTaskStatus @default(pending)
+  assignedTo  String?
+  reviewNotes String?
+  submittedAt DateTime         @default(now())
+  reviewedAt  DateTime?
+  service     Service          @relation(fields: [serviceId], references: [id])
+  changeLogs  ChangeLog[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([serviceId])
+  @@index([status])
+  @@index([taskType])
+  @@index([priority])
+}
+
+model ChangeLog {
+  id             String           @id @default(cuid())
+  serviceId      String
+  sourceRecordId String?
+  reviewTaskId   String?
+  fieldGroup     ChangeFieldGroup
+  changeType     ChangeType
+  beforeData     Json?
+  afterData      Json?
+  detectedAt     DateTime         @default(now())
+  status         ChangeStatus     @default(pending)
+  service        Service          @relation(fields: [serviceId], references: [id])
+  sourceRecord   SourceRecord?    @relation(fields: [sourceRecordId], references: [id])
+  reviewTask     ReviewTask?      @relation(fields: [reviewTaskId], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([serviceId])
+  @@index([sourceRecordId])
+  @@index([reviewTaskId])
+  @@index([fieldGroup])
+  @@index([status])
+  @@index([detectedAt])
+}
+
+model ServiceSnapshot {
+  id           String   @id @default(cuid())
+  serviceId    String
+  versionNo    Int
+  snapshotData Json
+  publishedBy  String?
+  publishedAt  DateTime @default(now())
+  service      Service  @relation(fields: [serviceId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([serviceId])
+  @@unique([serviceId, versionNo])
+}
