@@ -8,6 +8,14 @@ export async function listPendingReviewTasks() {
   });
 }
 
+export async function listOpenReviewTasks() {
+  return prisma.reviewTask.findMany({
+    where: { status: { in: ['pending', 'in_review'] } },
+    include: { service: true, changeLogs: true, actionLogs: true },
+    orderBy: [{ priority: 'asc' }, { submittedAt: 'asc' }]
+  });
+}
+
 export async function listServicesForAdmin() {
   return prisma.service.findMany({
     include: { serviceType: true },
