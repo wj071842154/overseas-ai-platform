@@ -5,6 +5,15 @@ export async function getServiceBySlug(slug: string) {
     where: { slug },
     include: {
       serviceType: true,
+      plans: {
+        orderBy: [{ price: 'asc' }, { createdAt: 'asc' }]
+      },
+      registrationRequirements: {
+        orderBy: { createdAt: 'asc' }
+      },
+      regionRequirements: {
+        orderBy: { regionCode: 'asc' }
+      },
       sourceRecords: {
         orderBy: { capturedAt: 'desc' },
         take: 3

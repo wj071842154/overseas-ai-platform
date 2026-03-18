@@ -25,7 +25,7 @@ async function main() {
   } as const;
 
   for (const service of launchServices) {
-    await prisma.service.upsert({
+    const record = await prisma.service.upsert({
       where: { slug: service.slug },
       update: {
         name: service.name,
@@ -44,6 +44,63 @@ async function main() {
         serviceTypeId: serviceTypes[service.typeCode].id
       }
     });
+
+    await prisma.plan.deleteMany({ where: { serviceId: record.id } });
+    await prisma.registrationRequirement.deleteMany({ where: { serviceId: record.id } });
+    await prisma.regionRequirement.deleteMany({ where: { serviceId: record.id } });
+    await prisma.sourceRecord.deleteMany({ where: { serviceId: record.id } });
+
+    for (const plan of service.plans) {
+      await prisma.plan.create({
+        data: {
+          serviceId: record.id,
+          name: plan.name,
+          billingType: plan.billingType,
+          currency: plan.currency,
+          price: plan.price,
+          priceUnit: plan.priceUnit,
+          paymentMethodsText: plan.paymentMethodsText,
+          isActive: true
+        }
+      });
+    }
+
+    await prisma.registrationRequirement.create({
+      data: {
+        serviceId: record.id,
+        requiresEmail: service.registration.requiresEmail,
+        requiresPhone: service.registration.requiresPhone,
+        requiresPaymentMethod: service.registration.requiresPaymentMethod,
+        requiresSpecificRegion: service.registration.requiresSpecificRegion,
+        regionNotes: service.registration.regionNotes,
+        deviceRequirements: service.registration.deviceRequirements,
+        otherRequirements: `${service.registration.otherRequirements} 适合人群：${service.audience} 主要门槛：${service.keyRequirement}`
+      }
+    });
+
+    for (const region of service.regions) {
+      await prisma.regionRequirement.create({
+        data: {
+          serviceId: record.id,
+          regionCode: region.regionCode,
+          availabilityType: region.availabilityType,
+          notes: region.notes
+        }
+      });
+    }
+
+    for (const sourceUrl of service.sourceUrls) {
+      await prisma.sourceRecord.create({
+        data: {
+          serviceId: record.id,
+          sourceType: 'editor_manual',
+          sourceUrl,
+          sourceTitle: `${service.name} 信息来源`,
+          rawExcerpt: service.summary,
+          capturedAt: new Date()
+        }
+      });
+    }
   }
 
   for (const article of [...coreArticles, ...coreComparisons]) {

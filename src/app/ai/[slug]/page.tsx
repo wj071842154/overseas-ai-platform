@@ -49,6 +49,9 @@ export default async function ServiceDetailPage({ params }: PageProps) {
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6">
           <h2 className="text-2xl font-semibold text-slate-900">先看结论</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {service.registrationRequirements[0]?.otherRequirements ?? '当前暂无进一步说明。'}
+          </p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
               <div className="mb-1 font-semibold text-slate-900">适合谁</div>
@@ -58,6 +61,65 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               <div className="mb-1 font-semibold text-slate-900">主要门槛</div>
               <p>需要结合支付方式、地区条件和规则变化一起判断。</p>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6">
+          <h2 className="text-2xl font-semibold text-slate-900">价格与套餐</h2>
+          <div className="mt-4 space-y-3">
+            {service.plans.length === 0 ? (
+              <p className="text-sm text-slate-600">当前暂无公开套餐信息，建议以官方页面为准。</p>
+            ) : (
+              service.plans.map((plan) => (
+                <div key={plan.id} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">{plan.name}</div>
+                  <div className="mt-1">价格：{String(plan.price)} {plan.currency} / {plan.priceUnit ?? plan.billingType}</div>
+                  <div className="mt-1">支付方式：{plan.paymentMethodsText ?? '以服务方说明为准'}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6">
+          <h2 className="text-2xl font-semibold text-slate-900">注册条件</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {service.registrationRequirements.length === 0 ? (
+              <p className="text-sm text-slate-600">当前暂无结构化注册条件。</p>
+            ) : (
+              service.registrationRequirements.map((item) => (
+                <React.Fragment key={item.id}>
+                  <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
+                    <div className="font-semibold text-slate-900">基础要求</div>
+                    <p className="mt-2">邮箱：{item.requiresEmail ? '需要' : '非必需'}</p>
+                    <p>手机号：{item.requiresPhone ? '需要' : '非必需'}</p>
+                    <p>支付方式：{item.requiresPaymentMethod ? '需要' : '非必需'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
+                    <div className="font-semibold text-slate-900">补充说明</div>
+                    <p className="mt-2">地区：{item.regionNotes ?? '以服务方说明为准。'}</p>
+                    <p>设备：{item.deviceRequirements ?? '常规环境。'}</p>
+                  </div>
+                </React.Fragment>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6">
+          <h2 className="text-2xl font-semibold text-slate-900">地区与可用性</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {service.regionRequirements.length === 0 ? (
+              <p className="text-sm text-slate-600">当前暂无地区结构化信息。</p>
+            ) : (
+              service.regionRequirements.map((region) => (
+                <div key={region.id} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">{region.regionCode}</div>
+                  <p className="mt-1">状态：{region.availabilityType}</p>
+                  <p className="mt-1">说明：{region.notes ?? '暂无补充说明。'}</p>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
