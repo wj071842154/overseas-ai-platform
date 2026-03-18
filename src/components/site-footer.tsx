@@ -2,10 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 
 const footerLinks = [
-  { href: '/disclaimer', label: '免责声明' },
+  { href: '/disclaimer', label: '免责声明页' },
   { href: '/privacy', label: '隐私政策' },
   { href: '/terms', label: '用户协议' },
-  { href: '/disclosure', label: '利益披露' },
+  { href: '/disclosure', label: '利益披露页' },
   { href: '/feedback', label: '纠错反馈' }
 ];
 
