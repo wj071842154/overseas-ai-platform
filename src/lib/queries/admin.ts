@@ -16,6 +16,48 @@ export async function listOpenReviewTasks() {
   });
 }
 
+export async function getReviewTaskDetail(reviewTaskId: string) {
+  const reviewTask = await prisma.reviewTask.findUnique({
+    where: { id: reviewTaskId },
+    include: {
+      service: {
+        include: {
+          sourceRecords: {
+            orderBy: { capturedAt: 'desc' }
+          }
+        }
+      },
+      changeLogs: {
+        include: {
+          sourceRecord: true
+        },
+        orderBy: { detectedAt: 'desc' }
+      },
+      actionLogs: {
+        orderBy: { createdAt: 'desc' }
+      }
+    }
+  });
+
+  if (!reviewTask) {
+    return {
+      reviewTask: null,
+      service: null,
+      changeLogs: [],
+      sourceRecords: [],
+      actionLogs: []
+    };
+  }
+
+  return {
+    reviewTask,
+    service: reviewTask.service,
+    changeLogs: reviewTask.changeLogs,
+    sourceRecords: reviewTask.service.sourceRecords,
+    actionLogs: reviewTask.actionLogs
+  };
+}
+
 export async function listServicesForAdmin() {
   return prisma.service.findMany({
     include: { serviceType: true },
