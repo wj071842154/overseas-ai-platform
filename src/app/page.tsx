@@ -18,7 +18,7 @@ export default function HomePage() {
         <div className="flex flex-wrap gap-4">
           <Link href="/search?q=chatgpt">查看示例搜索</Link>
           <Link href="/guides">浏览指南专题</Link>
-          <Link href="/search?q=价格">查看最新变更</Link>
+          <Link href="/changes">查看最新变更</Link>
         </div>
       </section>
     </main>
