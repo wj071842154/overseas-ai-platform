@@ -9,4 +9,6 @@ test('renders homepage hero entry points', () => {
   expect(screen.getByRole('link', { name: '查看 AI 服务' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: '查看海外账号' })).toBeInTheDocument();
   expect(screen.getByText('最新变化')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '浏览指南专题' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '查看最新变更' })).toBeInTheDocument();
 });

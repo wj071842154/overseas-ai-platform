@@ -15,7 +15,11 @@ export default function HomePage() {
       <section className="space-y-3">
         <h2>最新变化</h2>
         <p>优先关注价格、规则和注册条件变化，后续会在这里展示最新审核更新。</p>
-        <Link href="/search?q=chatgpt">查看示例搜索</Link>
+        <div className="flex flex-wrap gap-4">
+          <Link href="/search?q=chatgpt">查看示例搜索</Link>
+          <Link href="/guides">浏览指南专题</Link>
+          <Link href="/search?q=价格">查看最新变更</Link>
+        </div>
       </section>
     </main>
   );
